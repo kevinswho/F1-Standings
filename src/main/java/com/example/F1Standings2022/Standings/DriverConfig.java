@@ -1,8 +1,14 @@
 package com.example.F1Standings2022.Standings;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.json.JsonParser;
+import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -10,51 +16,49 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import static java.lang.Integer.valueOf;
+
 @Configuration
 public class DriverConfig {
 
-    private List<Driver> driverList() {
-        List<Driver> result = new ArrayList<>();
+    private static List<Driver> getDriversList()
+    {
+        final String driversURL = "http://ergast.com/api/f1/2022/11/driverStandings.json";
 
-        try {
-            URL url = new URL("url");
-            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.connect();
-            if(conn.getResponseCode() == 200) {
-                Scanner scan = new Scanner(url.openStream());
-                while(scan.hasNext()) {
-                    String temp = scan.nextLine();
-                    System.out.println(temp);
-                }
-            }
-        } catch(Exception e){
-            e.printStackTrace();
+        RestTemplate restTemplate = new RestTemplate();
+        String result = restTemplate.getForObject(driversURL, String.class);
+
+        JSONObject obj = new JSONObject(result);
+        JSONArray driverStandings = obj.getJSONObject("MRData")
+                .getJSONObject("StandingsTable")
+                .getJSONArray("StandingsLists")
+                .getJSONObject(0)
+                .getJSONArray("DriverStandings");
+
+        /*JSONObject max = driverStandings.getJSONObject(0); max is first object; current top driver as of 7/24
+        String maxName = max.getJSONObject("Driver").get("driverId").toString();
+        System.out.println(maxName);*/
+
+        List<Driver> drivers = new ArrayList<>();
+
+        for(int i=0; i<driverStandings.length(); i++) {
+            Driver curr = new Driver(
+                    valueOf(driverStandings.getJSONObject(i).getJSONObject("Driver").get("permanentNumber").toString()),
+                    driverStandings.getJSONObject(i).getJSONObject("Driver").get("driverId").toString(),
+                    driverStandings.getJSONObject(i).getJSONArray("Constructors").toString(),
+                    valueOf(driverStandings.getJSONObject(i).get("points").toString())
+            );
+            drivers.add(curr);
         }
-
-        //System.out.println(inline);
-
-        return result;
+        //System.out.println(drivers);
+        return drivers;
     }
 
     @Bean
     CommandLineRunner commandLineRunner(DriverRepository driverRepository) {
+
         return args -> {
-            Driver lewishamilton = new Driver(
-                    44,
-                    "Lewis Hamilton",
-                    "Mercedes",
-                    109
-            );
-
-            Driver valterribottas = new Driver(
-                    77,
-                    "Valterri Bottas",
-                    "Alfa Romeo",
-                    46
-            );
-
-            driverRepository.saveAll(List.of(lewishamilton,valterribottas));
+            driverRepository.saveAll(getDriversList());
         };
     }
 
