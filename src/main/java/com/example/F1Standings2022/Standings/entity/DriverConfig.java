@@ -1,8 +1,9 @@
-package com.example.F1Standings2022.Standings;
+package com.example.F1Standings2022.Standings.entity;
 
+//import com.example.F1Standings2022.Standings.repository.DriverRepository;
+import com.example.F1Standings2022.Standings.service.DriverService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.json.JsonParser;
-import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -10,16 +11,20 @@ import org.springframework.web.client.RestTemplate;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 import static java.lang.Integer.valueOf;
 
 @Configuration
 public class DriverConfig {
+
+    private DriverService driverService;
+
+    @Autowired
+    public DriverConfig(DriverService driverservice){
+        this.driverService = driverservice;
+    }
 
     private static List<Driver> getDriversList()
     {
@@ -42,23 +47,29 @@ public class DriverConfig {
         List<Driver> drivers = new ArrayList<>();
 
         for(int i=0; i<driverStandings.length(); i++) {
-            Driver curr = new Driver(
-                    valueOf(driverStandings.getJSONObject(i).getJSONObject("Driver").get("permanentNumber").toString()),
-                    driverStandings.getJSONObject(i).getJSONObject("Driver").get("driverId").toString(),
-                    driverStandings.getJSONObject(i).getJSONArray("Constructors").toString(),
-                    valueOf(driverStandings.getJSONObject(i).get("points").toString())
-            );
+
+            String driverFirstName = driverStandings.getJSONObject(i).getJSONObject("Driver").get("givenName").toString();
+            String driverLastName = driverStandings.getJSONObject(i).getJSONObject("Driver").get("familyName").toString();
+
+            int driverNumber = valueOf(driverStandings.getJSONObject(i).getJSONObject("Driver").get("permanentNumber").toString());
+            String driverName = driverFirstName + " " + driverLastName;
+            String driverConstructor = driverStandings.getJSONObject(i).getJSONArray("Constructors").getJSONObject(0).get("name").toString();
+            int driverPoints = valueOf(driverStandings.getJSONObject(i).get("points").toString());
+
+            Driver curr = new Driver(driverNumber, driverName, driverConstructor, driverPoints);
             drivers.add(curr);
+            //System.out.println(curr.toString() + "added");
         }
         //System.out.println(drivers);
         return drivers;
     }
 
     @Bean
-    CommandLineRunner commandLineRunner(DriverRepository driverRepository) {
+    CommandLineRunner commandLineRunner() {
 
         return args -> {
-            driverRepository.saveAll(getDriversList());
+            List<Driver> pullDrivers = getDriversList();
+            driverService.addDrivers(pullDrivers);
         };
     }
 

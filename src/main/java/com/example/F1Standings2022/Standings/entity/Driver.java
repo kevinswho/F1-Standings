@@ -1,10 +1,10 @@
-package com.example.F1Standings2022.Standings;
+package com.example.F1Standings2022.Standings.entity;
 
 import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table
+@Table(name="Drivers")
 public class Driver {
     @Id
     @SequenceGenerator(
@@ -47,5 +47,25 @@ public class Driver {
 
     public Integer getPoints() {
         return points;
+    }
+
+    @Override
+    public String toString() {
+        String result = String.format("<b>Driver/Number:</b> %s - %d, <b>Team:</b> %s, <b>Championship Points:</b> %d", name, driverNumber, team, points);
+        return result;
+    }
+
+    @Override
+    public boolean equals (Object o) {
+        if (!(o instanceof Driver)){
+            return false;
+        } else {
+            Driver driver = (Driver) o;
+            if (driver.getDriverNumber() == driverNumber) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 }
