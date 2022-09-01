@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name="Drivers")
+@Table(name="drivers_table")
 public class Driver {
     @Id
     @SequenceGenerator(
@@ -17,13 +17,13 @@ public class Driver {
             generator = "driver_sequence"
     )
 
-    private Integer driverNumber;
+    private Integer number;
     private String name;
     private String team;
     private Integer points;
 
     public Driver(Integer driverNumber, String name, String team, Integer points) {
-        this.driverNumber = driverNumber;
+        this.number = driverNumber;
         this.name = name;
         this.team = team;
         this.points = points;
@@ -34,7 +34,7 @@ public class Driver {
     }
 
     public Integer getDriverNumber() {
-        return driverNumber;
+        return number;
     }
 
     public String getName() {
@@ -51,7 +51,7 @@ public class Driver {
 
     @Override
     public String toString() {
-        String result = String.format("<b>Driver/Number:</b> %s - %d, <b>Team:</b> %s, <b>Championship Points:</b> %d", name, driverNumber, team, points);
+        String result = String.format("<b>Driver/Number:</b> %s - %d, <b>Team:</b> %s, <b>Championship Points:</b> %d", name, number, team, points);
         return result;
     }
 
@@ -61,7 +61,7 @@ public class Driver {
             return false;
         } else {
             Driver driver = (Driver) o;
-            if (driver.getDriverNumber() == driverNumber) {
+            if (driver.getDriverNumber() == number) {
                 return true;
             } else {
                 return false;
